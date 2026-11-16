@@ -1,0 +1,49 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: hh_postgres
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow_password
+      POSTGRES_DB: airflow_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: always
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: hh_clickhouse
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    restart: always
+
+  airflow:
+    build: .
+    container_name: hh_airflow
+    depends_on:
+      - postgres
+      - clickhouse
+    environment:
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow_password@postgres:5432/airflow_db
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./src:/opt/airflow/src
+    command: bash -c "airflow db migrate && airflow standalone"
+    restart: always
+
+volumes:
+  postgres_data:
+  clickhouse_data:
