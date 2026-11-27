@@ -3,6 +3,9 @@ import json
 import os
 import logging
 from datetime import datetime
+from dotenv import load_dotenv
+
+load_dotenv()
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s | %(levelname)s | %(message)s')
 logger = logging.getLogger(__name__)
@@ -23,7 +26,7 @@ def extract_hh_vacancies(text="Data Engineer", area=113, per_page=100):
     # hh.ru требует указывать User-Agent в заголовках
     headers = {
         "User-Agent": "MyDataPipelineApp/1.0 (vnnv_tvttoo@mail.ru)",
-        "HH-User-Agent": "MyDataPipelineApp/1.0 (vnnv_tvttoo@mail.ru)"
+        "Authorization": f"Bearer {os.getenv('HH_API_TOKEN')}"
     }
 
     logger.info(f"Запрос к API hh.ru по запросу: '{text}'...")
